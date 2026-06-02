@@ -361,17 +361,25 @@ class _HomeTabState extends ConsumerState<_HomeTab>
           duration: const Duration(milliseconds: 300),
           child: _showSearch
               ? Container(
-                  height: 40,
+                  height: 44,
                   constraints: const BoxConstraints(maxWidth: 280),
+                  margin: const EdgeInsets.symmetric(vertical: 6),
                   decoration: BoxDecoration(
                     color: isDark
                         ? Colors.white.withValues(alpha: 0.1)
-                        : Colors.black.withValues(alpha: 0.06),
-                    borderRadius: BorderRadius.circular(20),
+                        : Colors.white.withValues(alpha: 0.8),
+                    borderRadius: BorderRadius.circular(22),
+                    boxShadow: isDark ? [] : [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.04),
+                        blurRadius: 10,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
                     border: Border.all(
                       color: isDark
                           ? Colors.white.withValues(alpha: 0.15)
-                          : Colors.black.withValues(alpha: 0.1),
+                          : Colors.transparent,
                     ),
                   ),
                   child: RawAutocomplete<String>(
@@ -381,9 +389,11 @@ class _HomeTabState extends ConsumerState<_HomeTab>
                       if (textEditingValue.text.isEmpty) {
                         return const Iterable<String>.empty();
                       }
-                      return _popularCities.where((city) => city
-                          .toLowerCase()
-                          .contains(textEditingValue.text.toLowerCase()));
+                      return _popularCities
+                          .where((city) => city
+                              .toLowerCase()
+                              .contains(textEditingValue.text.toLowerCase()))
+                          .take(5);
                     },
                     onSelected: (String selection) {
                       _searchController.text = selection;
@@ -394,20 +404,19 @@ class _HomeTabState extends ConsumerState<_HomeTab>
                         controller: fieldController,
                         focusNode: focusNode,
                         autofocus: true,
+                        textInputAction: TextInputAction.search,
                         style: TextStyle(
                           color: isDark ? Colors.white : Colors.black87,
-                          fontSize: 14,
+                          fontSize: 15,
+                          fontWeight: FontWeight.w500,
                         ),
                         decoration: InputDecoration(
-                          hintText: 'Search city...',
+                          hintText: 'Search a city...',
                           border: InputBorder.none,
-                          focusedBorder: InputBorder.none,
-                          enabledBorder: InputBorder.none,
-                          errorBorder: InputBorder.none,
-                          disabledBorder: InputBorder.none,
+                          isDense: true,
                           contentPadding: const EdgeInsets.symmetric(
                             horizontal: 16,
-                            vertical: 10,
+                            vertical: 12,
                           ),
                           hintStyle: TextStyle(
                             color: isDark
@@ -417,7 +426,7 @@ class _HomeTabState extends ConsumerState<_HomeTab>
                           prefixIcon: const Icon(
                             Icons.search_rounded,
                             color: AppTheme.primaryBlue,
-                            size: 18,
+                            size: 20,
                           ),
                         ),
                         onSubmitted: (_) => _handleSearch(),
@@ -431,55 +440,54 @@ class _HomeTabState extends ConsumerState<_HomeTab>
                           child: Container(
                             width: 280,
                             margin: const EdgeInsets.only(top: 8),
+                            constraints: const BoxConstraints(maxHeight: 220),
                             decoration: BoxDecoration(
-                              color: isDark
-                                  ? const Color(0xFF1E2633)
-                                  : Colors.white,
+                              color: isDark ? const Color(0xFF1E2633) : Colors.white,
                               borderRadius: BorderRadius.circular(16),
+                              border: Border.all(
+                                color: isDark ? Colors.white10 : Colors.black12,
+                              ),
                               boxShadow: [
                                 BoxShadow(
-                                  color: Colors.black.withValues(alpha: 0.15),
-                                  blurRadius: 10,
-                                  offset: const Offset(0, 4),
+                                  color: Colors.black.withValues(alpha: 0.1),
+                                  blurRadius: 12,
+                                  offset: const Offset(0, 6),
                                 ),
                               ],
-                              border: Border.all(
-                                color: isDark
-                                    ? Colors.white.withValues(alpha: 0.1)
-                                    : Colors.black.withValues(alpha: 0.08),
-                              ),
                             ),
-                            child: ListView.separated(
-                              padding: EdgeInsets.zero,
-                              shrinkWrap: true,
-                              itemCount: options.length,
-                              separatorBuilder: (context, index) => Divider(
-                                height: 1,
-                                color: isDark
-                                    ? Colors.white.withValues(alpha: 0.05)
-                                    : Colors.black.withValues(alpha: 0.05),
-                              ),
-                              itemBuilder: (context, index) {
-                                final option = options.elementAt(index);
-                                return ListTile(
-                                  leading: const Icon(
-                                    Icons.location_city_rounded,
-                                    size: 16,
-                                    color: AppTheme.primaryBlue,
-                                  ),
-                                  title: Text(
-                                    option,
-                                    style: TextStyle(
-                                      color: isDark
-                                          ? Colors.white
-                                          : Colors.black87,
-                                      fontSize: 14,
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(16),
+                              child: ListView.separated(
+                                padding: EdgeInsets.zero,
+                                shrinkWrap: true,
+                                itemCount: options.length,
+                                separatorBuilder: (context, index) => Divider(
+                                  height: 1,
+                                  color: isDark
+                                      ? Colors.white.withValues(alpha: 0.05)
+                                      : Colors.black.withValues(alpha: 0.05),
+                                ),
+                                itemBuilder: (context, index) {
+                                  final option = options.elementAt(index);
+                                  return ListTile(
+                                    leading: const Icon(
+                                      Icons.location_city_rounded,
+                                      size: 16,
+                                      color: AppTheme.primaryBlue,
                                     ),
-                                  ),
-                                  dense: true,
-                                  onTap: () => onSelected(option),
-                                );
-                              },
+                                    title: Text(
+                                      option,
+                                      style: TextStyle(
+                                        color: isDark ? Colors.white : Colors.black87,
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                    dense: true,
+                                    onTap: () => onSelected(option),
+                                  );
+                                },
+                              ),
                             ),
                           ),
                         ),

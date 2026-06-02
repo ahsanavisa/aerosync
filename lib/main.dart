@@ -29,7 +29,6 @@ class AeroSyncApp extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final themeMode = ref.watch(themeModeProvider);
-    final isDark = themeMode == ThemeMode.dark;
 
     return MaterialApp(
       title: 'AeroSync',
@@ -38,10 +37,15 @@ class AeroSyncApp extends ConsumerWidget {
       darkTheme: AppTheme.darkTheme,
       themeMode: themeMode,
       // Wraps every route in the animated starfield/weather background.
-      builder: (context, child) => AnimatedBackground(
-        isDark: isDark,
-        child: child ?? const SizedBox.shrink(),
-      ),
+      builder: (context, child) {
+        final isDark = themeMode == ThemeMode.dark ||
+            (themeMode == ThemeMode.system &&
+                MediaQuery.platformBrightnessOf(context) == Brightness.dark);
+        return AnimatedBackground(
+          isDark: isDark,
+          child: child ?? const SizedBox.shrink(),
+        );
+      },
       home: const SplashScreen(),
     );
   }

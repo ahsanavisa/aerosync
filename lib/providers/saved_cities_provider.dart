@@ -132,8 +132,14 @@ class SavedCitiesNotifier extends Notifier<SavedCitiesState> {
   Future<void> removeCity(String cityId, String cityName) async {
     try {
       final updatedCities = state.cities.where((c) => c.id != cityId).toList();
-      final prefs = await SharedPreferences.getInstance();
       
+      // Update state synchronously to prevent Dismissible errors
+      state = state.copyWith(
+        cities: updatedCities,
+        successMessage: '$cityName removed from favorites.',
+      );
+
+      final prefs = await SharedPreferences.getInstance();
       final citiesJsonList = updatedCities.map((c) {
         final j = c.toJson();
         j['id'] = c.id;
@@ -141,11 +147,6 @@ class SavedCitiesNotifier extends Notifier<SavedCitiesState> {
       }).toList();
       
       await prefs.setString(_prefsKey, jsonEncode(citiesJsonList));
-      
-      state = state.copyWith(
-        cities: updatedCities,
-        successMessage: '$cityName removed from favorites.',
-      );
     } catch (e) {
       state = state.copyWith(
         errorMessage: 'Unable to remove city. Please try again.',

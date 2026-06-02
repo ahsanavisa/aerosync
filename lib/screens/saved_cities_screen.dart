@@ -292,6 +292,17 @@ class _SavedCitiesScreenState extends ConsumerState<SavedCitiesScreen>
       }
     });
 
+    // Foolproof: check for any cities that need weather fetched whenever the widget builds
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      for (final city in savedState.cities) {
+        if (!_weatherCache.containsKey(city.id) &&
+            !(_loadingMap[city.id] ?? false)) {
+          _fetchCityWeather(city);
+        }
+      }
+    });
+
     return Scaffold(
       backgroundColor: Colors.transparent,
       appBar: AppBar(
@@ -322,29 +333,59 @@ class _SavedCitiesScreenState extends ConsumerState<SavedCitiesScreen>
                   itemCount: savedState.cities.length,
                   itemBuilder: (context, index) {
                     final city = savedState.cities[index];
-                    return AnimatedListItem(
-                      delay: index * 80,
-                      child: CityListTile(
-                        city: city,
-                        weatherData: _weatherCache[city.id],
-                        isLoadingWeather: _loadingMap[city.id] ?? false,
-                        onTap: () {
-                          ref
-                              .read(weatherProvider.notifier)
-                              .fetchWeatherByCity(city.cityName);
-                          ref.read(tabIndexProvider.notifier).state = 0;
-                          ScaffoldMessenger.of(context)
-                            ..clearSnackBars()
-                            ..showSnackBar(
-                              SnackBar(
-                                content: Text(
-                                  'Loading ${city.cityName} weather...',
+                    return Dismissible(
+                      key: Key(city.id),
+                      direction: DismissDirection.endToStart,
+                      background: Container(
+                        alignment: Alignment.centerRight,
+                        padding: const EdgeInsets.only(right: 20),
+                        margin: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 5,
+                        ),
+                        decoration: BoxDecoration(
+                          color: AppTheme.errorColor,
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: const Icon(
+                          Icons.delete_forever_rounded,
+                          color: Colors.white,
+                          size: 28,
+                        ),
+                      ),
+                      onDismissed: (direction) {
+                        ref
+                            .read(savedCitiesProvider.notifier)
+                            .removeCity(city.id, city.cityName);
+                        setState(() {
+                          _weatherCache.remove(city.id);
+                          _loadingMap.remove(city.id);
+                        });
+                      },
+                      child: AnimatedListItem(
+                        delay: index * 80,
+                        child: CityListTile(
+                          city: city,
+                          weatherData: _weatherCache[city.id],
+                          isLoadingWeather: _loadingMap[city.id] ?? false,
+                          onTap: () {
+                            ref
+                                .read(weatherProvider.notifier)
+                                .fetchWeatherByCity(city.cityName);
+                            ref.read(tabIndexProvider.notifier).state = 0;
+                            ScaffoldMessenger.of(context)
+                              ..clearSnackBars()
+                              ..showSnackBar(
+                                SnackBar(
+                                  content: Text(
+                                    'Loading ${city.cityName} weather...',
+                                  ),
+                                  duration: const Duration(seconds: 1),
                                 ),
-                                duration: const Duration(seconds: 1),
-                              ),
-                            );
-                        },
-                        onDelete: () => _confirmDelete(city),
+                              );
+                          },
+                          onDelete: () => _confirmDelete(city),
+                        ),
                       ),
                     );
                   },
