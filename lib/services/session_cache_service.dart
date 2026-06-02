@@ -34,7 +34,13 @@ class SessionCacheService {
   Future<T?> getPersistent<T>(String key, {int? maxAgeMinutes, T Function(Map<String, dynamic>)? fromJson}) async {
     // Return from memory if available (Fast Path)
     if (_inMemoryCache.containsKey(key)) {
-      return _inMemoryCache[key] as T?;
+      final cachedVal = _inMemoryCache[key];
+      if (fromJson != null && cachedVal is Map) {
+        final result = fromJson(Map<String, dynamic>.from(cachedVal));
+        _inMemoryCache[key] = result;
+        return result;
+      }
+      return cachedVal as T?;
     }
 
     final prefs = await SharedPreferences.getInstance();
@@ -55,8 +61,8 @@ class SessionCacheService {
       final value = data['value'];
       
       // If a mapper is provided, use it to reconstruct the object (e.g., WeatherModel)
-      if (fromJson != null && value is Map<String, dynamic>) {
-        final result = fromJson(value);
+      if (fromJson != null && value is Map) {
+        final result = fromJson(Map<String, dynamic>.from(value));
         _inMemoryCache[key] = result;
         return result;
       }
